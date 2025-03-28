@@ -1,15 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { admin, clientAuth, signInWithEmailAndPassword } from '../auth/firebase';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { admin } from './firebase';
 
 @Injectable()
 export class AuthService {
-  async login(email: string, password: string) {
-    const cred = await signInWithEmailAndPassword(clientAuth, email, password);
-    const token = await cred.user.getIdToken();
-    return { token };
+  async verifyToken(idToken: string) {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      return decodedToken;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 
-  async verifyToken(token: string) {
-    return admin.auth().verifyIdToken(token);
+  async getUser(uid: string) {
+    return admin.auth().getUser(uid);
+  }
+
+  async createUser(email: string, password: string) {
+    return admin.auth().createUser({ email, password });
+  }
+
+  async deleteUser(uid: string) {
+    return admin.auth().deleteUser(uid);
   }
 }

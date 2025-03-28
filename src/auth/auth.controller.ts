@@ -1,17 +1,27 @@
-import { Controller, Post, Body, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Delete } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  login(@Body() body: { email: string; password: string }) {
-    return this.auth.login(body.email, body.password);
+  @Post('verify')
+  verify(@Body('token') token: string) {
+    return this.authService.verifyToken(token);
   }
 
-  @Get('profile')
-  profile(@Req() req: any) {
-    return req.user;
+  @Post('register')
+  register(@Body() body: { email: string; password: string }) {
+    return this.authService.createUser(body.email, body.password);
+  }
+
+  @Get('user')
+  getUser(@Query('uid') uid: string) {
+    return this.authService.getUser(uid);
+  }
+
+  @Delete('user')
+  deleteUser(@Query('uid') uid: string) {
+    return this.authService.deleteUser(uid);
   }
 }
