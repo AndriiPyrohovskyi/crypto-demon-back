@@ -5,7 +5,7 @@ import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 const credentials = JSON.parse(process.env.FIREBASE_CREDENTIALS || '{}');
 
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  credential: admin.credential.cert(require(process.env.GOOGLE_APPLICATION_CREDENTIALS!)),
 });
 
 const firebaseConfig = {
