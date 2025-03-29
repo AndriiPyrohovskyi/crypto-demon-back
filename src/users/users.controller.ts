@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
 
@@ -15,4 +15,8 @@ export class UsersController {
   create(@Body() user: Partial<User>) {
     return this.service.create(user);
   }
+  @Get('profile')
+  getProfile(@Req() req) {
+  return req.user; // тут вже decoded Firebase токен
+}
 }
