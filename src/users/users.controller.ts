@@ -17,6 +17,6 @@ export class UsersController {
   }
   @Get('profile')
   getProfile(@Req() req) {
-  return req.user; // тут вже decoded Firebase токен
+  return req.user;
 }
 }
