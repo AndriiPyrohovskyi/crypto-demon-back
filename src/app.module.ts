@@ -6,6 +6,10 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/auth.middleware';
+import { TradeModule } from './trade/trade.module';
+import { TransactionModule } from './transaction/transaction.module';
+import { CurrencyModule } from './currency/currency.module';
+import { ExchangeModule } from './exchange/exchange.module';
 
 @Module({
   imports: [
@@ -22,7 +26,7 @@ import { AuthMiddleware } from './auth/auth.middleware';
           rejectUnauthorized: false,
         },
       },
-    }), UsersModule,
+    }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule
   ],
   controllers: [AppController],
   providers: [AppService],
