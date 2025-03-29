@@ -9,7 +9,11 @@ let serviceAccount: admin.ServiceAccount;
 
 if (process.env.FIREBASE_CONFIG) {
   try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+    const raw = JSON.parse(process.env.FIREBASE_CONFIG);
+
+    raw.private_key = raw.private_key.replace(/\\n/g, '\n');
+
+    serviceAccount = raw;
   } catch (err) {
     throw new Error('Invalid FIREBASE_CONFIG format in environment variables');
   }
