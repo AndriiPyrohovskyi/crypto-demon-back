@@ -20,6 +20,7 @@ export class AuthController {
     return this.authService.getUser(uid);
   }
 
+  
   @Delete('user')
   deleteUser(@Query('uid') uid: string) {
     return this.authService.deleteUser(uid);

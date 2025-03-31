@@ -6,7 +6,10 @@ export class User {
   id: number;
 
   @Column({ nullable: true })
-  nickname: string;
+  firebaseUid: string;
+
+  @Column({ nullable: true })
+  username: string;
 
   @Column({ nullable: true })
   email: string;
