@@ -11,8 +11,8 @@ export class AuthController {
   }
 
   @Post('register')
-  register(@Body() body: { email: string; password: string }) {
-    return this.authService.createUser(body.email, body.password);
+  register(@Body() body: { email: string; username: string; firebaseUid: string }) {
+    return this.authService.registerUser(body.email, body.username, body.firebaseUid);
   }
 
   @Get('user')
