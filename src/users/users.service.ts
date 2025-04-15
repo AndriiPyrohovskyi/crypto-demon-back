@@ -5,24 +5,17 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  userRepository: any;
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
   findAll(): Promise<User[]> {
     return this.repo.find();
   }
-  async findOrCreateUser(data: { uid: string; email: string }) {
-    let user = await this.userRepository.findOne({ where: { uid: data.uid } });
-  
-    if (!user) {
-      user = this.userRepository.create({
-        uid: data.uid,
-        email: data.email,
-      });
-      await this.userRepository.save(user);
+  async findUser(data: { uid: string}) {
+    let user = await this.repo.findOne({ where: { firebaseUid: data.uid } });
+    if (user) {
+      return user;
     }
-  
-    return user;
+    return null;
   }  
   create(user: Partial<User>): Promise<User> {
     const newUser = this.repo.create(user);

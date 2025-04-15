@@ -6,9 +6,6 @@ export class User {
   id: number;
 
   @Column({ nullable: true })
-  nickname: string;
-
-  @Column({ nullable: true })
   email: string;
 
   @Column('decimal', { precision: 18, scale: 8, nullable: true })
@@ -18,11 +15,17 @@ export class User {
   created_at: Date;
 
   @Column({ nullable: true, type: 'text' })
-  avatar_url: string;
+  avatar_url: string | null;
 
   @Column({ nullable: true })
   role: string;
 
   @Column({ type: 'timestamp', nullable: true })
-  last_login: Date;
+  last_login: Date | null;
+
+  @Column({ nullable: true })
+  firebaseUid: string;
+
+  @Column({ nullable: true })
+  username: string;
 }
