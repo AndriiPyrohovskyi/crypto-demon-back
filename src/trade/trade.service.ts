@@ -45,6 +45,13 @@ export class TradeService {
       throw new BadRequestException('Недостатньо коштів для відкриття позиції');
     }
 
+    const existing = await this.repo.findOne({
+      where: { user: { id: userId }, currency: { id: currencyId }, status: 'open' },
+    });
+    if (existing) {
+      throw new BadRequestException('У вас вже є відкрита позиція по цій валюті');
+    }
+
     const value = margin * leverage;
 
     let liquidationPrice: number;
@@ -53,7 +60,7 @@ export class TradeService {
     } else {
       liquidationPrice = entryPrice + (entryPrice / leverage);
     }
-    
+
     await this.usersService.updateBalance(userId, -margin);
 
     const trade = this.repo.create({
@@ -69,50 +76,51 @@ export class TradeService {
       fixed_user_profit: 0,
       fixed_company_profit: 0,
     });
-    
+
     return await this.repo.save(trade);
   }
 
   async closeTrade(tradeId: number, exitPrice: number): Promise<Trade> {
-    const trade = await this.repo.findOne({ where: { id: tradeId } });
+    const trade = await this.repo.findOne({ where: { id: tradeId }, relations: ['user'] });
     if (!trade) {
       throw new NotFoundException('Позицію не знайдено');
     }
     if (trade.status !== 'open') {
       throw new BadRequestException('Позиція вже закрита або ліквідована');
     }
-    
+
+    const positionSize = parseFloat(trade.margin.toString()) * parseFloat(trade.leverage.toString());
     let profit = 0;
     if (trade.type === 'buy') {
-      profit = (exitPrice - trade.bought_at_price) * trade.value;
+      profit = (exitPrice - trade.bought_at_price) * (positionSize / trade.bought_at_price);
     } else {
-      profit = (trade.bought_at_price - exitPrice) * trade.value;
+      profit = (trade.bought_at_price - exitPrice) * (positionSize / trade.bought_at_price);
     }
 
-    trade.fixed_user_profit = parseFloat(profit.toFixed(8));
-    trade.fixed_company_profit = parseFloat((profit * 0.01).toFixed(8)); // наприклад, 1% комісія
+    trade.fixed_company_profit = parseFloat((profit * 0.05).toFixed(8));
+    trade.fixed_user_profit = parseFloat(profit.toFixed(8))-trade.fixed_company_profit;
     trade.status = 'closed';
     trade.closed_at = new Date();
-    
-    const amountToReturn = trade.margin + profit;
+
+    const amountToReturn = parseFloat(trade.margin.toString()) + parseFloat(profit.toString());
     await this.usersService.updateBalance(trade.user.id, amountToReturn);
-    
+
     return await this.repo.save(trade);
   }
 
   async checkLiquidation(tradeId: number, currentPrice: number): Promise<Trade> {
-    const trade = await this.repo.findOne({ where: { id: tradeId } });
+    const trade = await this.repo.findOne({ where: { id: tradeId }, relations: ['user'] });
     if (!trade) {
       throw new NotFoundException('Позицію не знайдено');
     }
     if (trade.status !== 'open') {
       return trade;
     }
-    
+
     const shouldLiquidate =
       (trade.type === 'buy' && currentPrice <= trade.liquidation_price) ||
       (trade.type === 'sell' && currentPrice >= trade.liquidation_price);
-    
+
     if (shouldLiquidate) {
       trade.status = 'liquidated';
       trade.closed_at = new Date();
@@ -120,11 +128,19 @@ export class TradeService {
       trade.fixed_company_profit = 0;
       return await this.repo.save(trade);
     }
-    
+
     return trade;
   }
-  
+
   async findAll(): Promise<Trade[]> {
-    return this.repo.find();
+    return this.repo.find({ relations: ['user', 'currency'] });
+  }
+
+  async findUserTrades(userId: number): Promise<Trade[]> {
+    return this.repo.find({ where: { user: { id: userId } }, relations: ['currency'] });
+  }
+
+  async findOpenTrades(userId: number): Promise<Trade[]> {
+    return this.repo.find({ where: { user: { id: userId }, status: 'open' }, relations: ['currency'] });
   }
 }
