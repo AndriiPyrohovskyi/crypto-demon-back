@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { AuthMiddleware } from './auth/auth.middleware';
 import { TradeModule } from './trade/trade.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { CurrencyModule } from './currency/currency.module';
@@ -31,13 +30,4 @@ import { ExchangeModule } from './exchange/exchange.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .forRoutes(
-        { path: 'users/profile', method: RequestMethod.GET },
-        { path: 'users', method: RequestMethod.GET }
-      );
-  }
-}
+export class AppModule {}
