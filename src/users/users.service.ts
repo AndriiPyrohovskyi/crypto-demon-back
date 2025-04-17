@@ -32,7 +32,7 @@ export class UsersService {
 
   async updateBalance(userId: number, amount: number): Promise<User> {
     const user = await this.findById(userId);
-    const newBalance = user.balance + amount;
+    const newBalance = parseFloat(user.balance.toString()) + amount;
     if (newBalance < 0) {
       throw new Error('Недостатньо коштів для виконання операції');
     }
