@@ -1,4 +1,4 @@
-import { Controller, Get} from '@nestjs/common';
+import { Controller, Get, Param} from '@nestjs/common';
 import { CurrencyService } from './currency.service';
 
 @Controller('currency')
@@ -7,5 +7,15 @@ export class CurrencyController {
   @Get()
   findAll() {
   return this.service.findAll();
+  }
+
+  @Get('prices')
+  getPrices() {
+    return this.service.getCurrenciesWithPrices();
+  }
+
+  @Get('price/:symbol')
+  getPriceBySymbol(@Param('symbol') symbol: string) {
+    return this.service.getCurrencyBySymbol(symbol);
   }
 }

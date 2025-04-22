@@ -40,5 +40,13 @@ export class UsersService {
     user.balance = newBalance;
     return await this.repo.save(user);
   }
+
+  async deleteUser(uid: string): Promise<void> {
+    const user = await this.repo.findOne({ where: { firebaseUid: uid } });
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
+    }
+    await this.repo.remove(user);
+  }
 }
 

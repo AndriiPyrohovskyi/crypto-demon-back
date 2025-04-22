@@ -6,7 +6,7 @@ import e from 'express';
 @Injectable()
 export class AuthService {
   constructor(private usersService: UsersService) {}
-  async verifyToken(idToken: string) {
+  async getUser(idToken: string) {
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       if (!decodedToken.email) {
@@ -27,10 +27,6 @@ export class AuthService {
     }
   }
 
-  async getUser(uid: string) {
-    return this.usersService.findUser({ uid });
-  }
-
   async registerUser(email: string, username: string, firebaseUid: string) {
     const user = await this.usersService.create({
       email: email,
@@ -46,6 +42,7 @@ export class AuthService {
   }
 
   async deleteUser(uid: string) {
+    this.usersService.deleteUser(uid);
     return admin.auth().deleteUser(uid);
   }
 }
