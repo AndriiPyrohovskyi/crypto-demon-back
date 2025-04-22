@@ -11,9 +11,6 @@ export class Currency {
   @Column()
   symbol: string;
 
-  @Column()
-  external_id: string;
-
   @Column({ type: 'text', nullable: true })
   logo_url: string;
 }
