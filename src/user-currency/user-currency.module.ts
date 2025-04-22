@@ -3,9 +3,11 @@ import { UserCurrencyService } from './user-currency.service';
 import { UserCurrencyController } from './user-currency.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserCurrency } from './user-currency.entity';
+import { UsersModule } from 'src/users/users.module';
+import { CurrencyModule } from 'src/currency/currency.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserCurrency])],
+  imports: [TypeOrmModule.forFeature([UserCurrency]),UsersModule, CurrencyModule],
   providers: [UserCurrencyService],
   controllers: [UserCurrencyController],
   exports: [UserCurrencyService],
