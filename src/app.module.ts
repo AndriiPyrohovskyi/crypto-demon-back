@@ -9,6 +9,9 @@ import { TradeModule } from './trade/trade.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { CurrencyModule } from './currency/currency.module';
 import { ExchangeModule } from './exchange/exchange.module';
+import { User } from './users/user.entity';
+import { UserCurrency } from './user-currency/user-currency.entity';
+import { UserCurrencyModule } from './user-currency/user-currency.module';
 
 @Module({
   imports: [
@@ -25,7 +28,7 @@ import { ExchangeModule } from './exchange/exchange.module';
           rejectUnauthorized: false,
         },
       },
-    }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule
+    }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule, UserCurrencyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

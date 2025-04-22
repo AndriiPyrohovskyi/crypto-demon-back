@@ -52,4 +52,12 @@ export class CurrencyService {
       };
     }
   }
+
+  async getCurrencyIdBySymbol(symbol: string){
+    const currency = await this.repo.findOne({ where: { symbol } });
+    if (!currency) {
+      throw new Error('Currency not found');
+    }
+    return currency.id;
+  }
 }  
