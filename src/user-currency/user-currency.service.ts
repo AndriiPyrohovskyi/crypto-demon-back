@@ -3,9 +3,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserCurrency } from './user-currency.entity';
-import { User } from '../users/user.entity';
-import { Currency } from '../currency/currency.entity';
-import { admin } from 'src/auth/firebase';
 import { UsersService } from 'src/users/users.service';
 import { CurrencyService } from 'src/currency/currency.service';
 
@@ -15,7 +12,7 @@ export class UserCurrencyService {
     @InjectRepository(UserCurrency)
     private userCurrencyRepo: Repository<UserCurrency>,
     private usersService: UsersService,
-    private curencyService: CurrencyService,
+    private currencyService: CurrencyService,
   ) {}
 
   async getAllByUser(firebaseUid): Promise<UserCurrency[]> {
@@ -27,7 +24,7 @@ export class UserCurrencyService {
   }
 
   async getOne(firebaseUid: string, symbol:string): Promise<UserCurrency> {
-    const currencyId = await this.curencyService.getCurrencyIdBySymbol(symbol);
+    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
     const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
     const record = await this.userCurrencyRepo.findOne({
       where: { user: { id: userId }, currency: { id: currencyId } },
@@ -41,7 +38,7 @@ export class UserCurrencyService {
   }
 
   async createOrUpdate(firebaseUid: string, symbol:string, amount: number): Promise<UserCurrency> {
-    const currencyId = await this.curencyService.getCurrencyIdBySymbol(symbol);
+    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
     const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
     let userCurrency = await this.userCurrencyRepo.findOne({
       where: { user: { id: userId }, currency: { id: currencyId } },
