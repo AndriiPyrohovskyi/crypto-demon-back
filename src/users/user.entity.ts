@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { UserCurrency } from 'src/user-currency/user-currency.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
 
 @Entity('Users')
 export class User {
@@ -28,4 +29,7 @@ export class User {
 
   @Column({ nullable: true })
   username: string;
+
+  @OneToMany(() => UserCurrency, uc => uc.user)
+  userCurrencies: UserCurrency[];
 }

@@ -15,6 +15,7 @@ export class UsersController {
   create(@Body() user: Partial<User>) {
     return this.service.create(user);
   }
+  
   @Get('profile')
   getProfile(@Req() req) {
   return req.user;

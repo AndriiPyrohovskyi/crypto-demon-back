@@ -10,6 +10,7 @@ export class UsersService {
   findAll(): Promise<User[]> {
     return this.repo.find();
   }
+  
   async findUser(data: { uid: string}) {
     let user = await this.repo.findOne({ where: { firebaseUid: data.uid } });
     if (user) {

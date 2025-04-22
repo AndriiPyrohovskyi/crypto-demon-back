@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Delete, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -10,13 +10,13 @@ export class AuthController {
     return this.authService.registerUser(body.email, body.username, body.firebaseUid);
   }
 
-  @Get('user/:token')
-  getUserByToken(@Query('token') token: string) {
-    return this.authService.getUser(token);
+  @Get('user')
+  getUserByToken(@Req() req: Request) {
+    return this.authService.getUser(req['user'].uid);
   }
 
   @Delete('user')
-  deleteUser(@Query('uid') uid: string) {
-    return this.authService.deleteUser(uid);
+  deleteUser(@Req() req: Request) {
+    return this.authService.deleteUser(req['user'].uid);
   }
 }
