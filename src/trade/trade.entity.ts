@@ -48,18 +48,18 @@ export class Trade {
   @Column({ type: 'timestamp', nullable: true })
   closed_at: Date;
 
-  @Column({ type: 'decimal', precision: 18, scale: 8})
+  @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   closing_price: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2})
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   TP_value: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 8})
+  @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   TP_price: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2})
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   SL_value: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 8 })
+  @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   SL_price: number;
 }
