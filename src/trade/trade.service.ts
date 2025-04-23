@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Trade } from './trade.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
+import { CurrencyService } from 'src/currency/currency.service';
 
 @Injectable()
 export class TradeService {
@@ -12,25 +13,30 @@ export class TradeService {
   constructor(
     @InjectRepository(Trade) private repo: Repository<Trade>,
     private usersService: UsersService,
+    private currencyService: CurrencyService,
   ) {}
 
   async createTrade(data: {
-    userId: number;
-    currencyId: number;
+    symbol: string;
     margin: number;
     leverage: number;
     type: 'buy' | 'sell';
     entryPrice: number;
-  }): Promise<Trade> {
-    const { userId, currencyId, margin, leverage, type, entryPrice } = data;
+    closing_price: number;
+    TP_value: number;
+    TP_price: number;
+    SL_value: number;
+    SL_price: number;
+  }, uid): Promise<Trade> {
+    const { symbol, margin, leverage, type, entryPrice, closing_price, TP_value, TP_price, SL_price, SL_value} = data;
+    
     if (margin <= 0 || leverage <= 0) {
       throw new BadRequestException('Маржа та кредитне плече мають бути > 0');
     }
     if (leverage > this.MAX_LEVERAGE) {
       throw new BadRequestException(`Кредитне плече не може перевищувати ${this.MAX_LEVERAGE}x`);
     }
-
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.findUser({ uid: uid })
     if (!user) {
       throw new NotFoundException('Користувача не знайдено');
     }
@@ -44,9 +50,9 @@ export class TradeService {
     if (user.balance - margin < 0) {
       throw new BadRequestException('Недостатньо коштів для відкриття позиції');
     }
-
+    const currencyId= await this.currencyService.getCurrencyIdBySymbol(symbol);
     const existing = await this.repo.findOne({
-      where: { user: { id: userId }, currency: { id: currencyId }, status: 'open' },
+      where: { user: { id: user.id }, currency: { id: currencyId }, status: 'open' },
     });
     if (existing) {
       throw new BadRequestException('У вас вже є відкрита позиція по цій валюті');
@@ -61,10 +67,11 @@ export class TradeService {
       liquidationPrice = entryPrice + (entryPrice / leverage);
     }
 
-    await this.usersService.updateBalance(userId, -margin);
+    await this.usersService.updateBalance(user.id, -margin);
+
 
     const trade = this.repo.create({
-      user: { id: userId },
+      user: { id: user.id },
       currency: { id: currencyId },
       margin,
       leverage,
@@ -75,6 +82,11 @@ export class TradeService {
       status: 'open',
       fixed_user_profit: 0,
       fixed_company_profit: 0,
+      closing_price: closing_price,
+      TP_value: TP_value,
+      TP_price: TP_price,
+      SL_value: SL_value,
+      SL_price: SL_price,
     });
 
     return await this.repo.save(trade);
@@ -136,11 +148,13 @@ export class TradeService {
     return this.repo.find({ relations: ['user', 'currency'] });
   }
 
-  async findUserTrades(userId: number): Promise<Trade[]> {
-    return this.repo.find({ where: { user: { id: userId } }, relations: ['currency'] });
+  async findUserTrades(uid: string): Promise<Trade[]> {
+    const user = await this.usersService.findUser({ uid: uid });
+    return this.repo.find({ where: { user: { id: user.id } }, relations: ['currency'] });
   }
 
-  async findOpenTrades(userId: number): Promise<Trade[]> {
-    return this.repo.find({ where: { user: { id: userId }, status: 'open' }, relations: ['currency'] });
+  async findOpenTrades(uid: string): Promise<Trade[]> {
+    const user = await this.usersService.findUser({ uid: uid });
+    return this.repo.find({ where: { user: { id: user.id }, status: 'open' }, relations: ['currency'] });
   }
 }

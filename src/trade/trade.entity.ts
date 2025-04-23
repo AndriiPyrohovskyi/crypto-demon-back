@@ -47,4 +47,19 @@ export class Trade {
 
   @Column({ type: 'timestamp', nullable: true })
   closed_at: Date;
+
+  @Column({ type: 'decimal', precision: 18, scale: 8})
+  closing_price: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2})
+  TP_value: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 8})
+  TP_price: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2})
+  SL_value: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 8 })
+  SL_price: number;
 }
