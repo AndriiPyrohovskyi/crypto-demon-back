@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import { TradeService } from './trade.service';
 
 @Controller('trade')
@@ -11,16 +11,27 @@ export class TradeController {
     return { status: 'success', trades };
   }
 
+  @Get('user-trades')
+  async findUserTrades(@Req() req: Request) {
+    const trades = await this.tradeService.findUserTrades(req['user'].uid);
+    return { status: 'success', trades };
+  }
+
   @Post('create')
   async createTrade(@Body() body: {
-    userId: number;
-    currencyId: number;
+    symbol: string;
     margin: number;
     leverage: number;
     type: 'buy' | 'sell';
     entryPrice: number;
-  }) {
-    const trade = await this.tradeService.createTrade(body);
+    closing_price: number;
+    TP_value: number;
+    SL_value: number;
+    TP_price: number;
+    SL_price: number;
+  }, @Req() req: Request) {
+    const userUid = req['user'].uid;
+    const trade = await this.tradeService.createTrade(body, userUid);
     return {
       status: 'success',
       message: 'Позиція успішно відкрита',
