@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
@@ -20,5 +21,11 @@ export class UsersController {
   @Get('profile')
   getProfile(@Req() req) {
   return req.user;
-}
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() req) {
+  return this.service.uploadAvatar(req.user.uid, file);
+  }
 }
