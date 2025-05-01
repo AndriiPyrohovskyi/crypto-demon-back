@@ -5,10 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { CloudinaryProvider } from './cloudinary.provider';
 import { ConfigModule } from '@nestjs/config';
-import { UserCurrencyModule } from 'src/user-currency/user-currency.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), ConfigModule, UserCurrencyModule],
+  imports: [TypeOrmModule.forFeature([User]), ConfigModule],
   providers: [UsersService, CloudinaryProvider],
   controllers: [UsersController],
   exports: [UsersService],

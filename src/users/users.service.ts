@@ -4,14 +4,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import toStream = require('buffer-to-stream');
-import { UserCurrencyService } from '../user-currency/user-currency.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private repo: Repository<User>,
     @Inject('CLOUDINARY') private cloudinary: any,
-    private userCurrencyService: UserCurrencyService, 
   ) {}
 
   findAll(): Promise<User[]> {
