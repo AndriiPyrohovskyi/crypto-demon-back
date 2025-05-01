@@ -9,9 +9,6 @@ export class User {
   @Column({ nullable: true })
   email: string;
 
-  @Column('decimal', { precision: 18, scale: 8, nullable: true })
-  balance: number;
-
   @CreateDateColumn()
   created_at: Date;
 
@@ -27,7 +24,7 @@ export class User {
   @Column({ nullable: true })
   firebaseUid: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   username: string;
 
   @OneToMany(() => UserCurrency, uc => uc.user)

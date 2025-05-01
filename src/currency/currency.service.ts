@@ -16,12 +16,14 @@ export class CurrencyService {
 
     const pricePromises = currencies.map(async (currency) => {
       try {
+        if(currency.symbol!== 'USDT') {
         const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${currency.symbol}USDT`);
         const data = await res.json();
         return {
           ...currency,
           price: parseFloat(data.price),
         };
+      }
       } catch (err) {
         return {
           ...currency,
@@ -35,7 +37,9 @@ export class CurrencyService {
   async getCurrencyBySymbol(symbol: string): Promise<(Currency & { price: number | null }) | null> {
     const currency = await this.repo.findOne({ where: { symbol } });
     if (!currency) return null;
-  
+    if (currency.symbol === 'USDT') {
+      return { ...currency, price: 1 };
+    }
     try {
       const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()}USDT`);
       if (!res.ok) throw new Error('Failed to fetch price');
@@ -60,4 +64,4 @@ export class CurrencyService {
     }
     return currency.id;
   }
-}  
+}

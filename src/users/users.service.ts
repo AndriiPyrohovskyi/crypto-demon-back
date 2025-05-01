@@ -4,10 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import toStream = require('buffer-to-stream');
+import { UserCurrencyService } from '../user-currency/user-currency.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private repo: Repository<User>,  @Inject('CLOUDINARY') private cloudinary: any,) {}
+  constructor(
+    @InjectRepository(User) private repo: Repository<User>,
+    @Inject('CLOUDINARY') private cloudinary: any,
+    private userCurrencyService: UserCurrencyService, 
+  ) {}
 
   findAll(): Promise<User[]> {
     return this.repo.find();
@@ -33,15 +38,12 @@ export class UsersService {
     return user;
   }
 
-  async updateBalance(userId: number, amount: number): Promise<User> {
-    const user = await this.findById(userId);
-    const currentBalance = parseFloat(user.balance.toString());
-    const newBalance = currentBalance + amount;
-    if (newBalance < 0) {
-      throw new Error('Недостатньо коштів для виконання операції');
+  async findByName(username: string): Promise<User> {
+    const user = await this.repo.findOne({ where: { username } });
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
     }
-    user.balance = newBalance;
-    return await this.repo.save(user);
+    return user;
   }
 
   async deleteUser(uid: string): Promise<void> {
@@ -64,7 +66,7 @@ export class UsersService {
 
     const result = await this.uploadToCloudinary(file);
     user.avatar_url = result.secure_url;
-    this.repo.save(user);
+    await this.repo.save(user); 
     return({massege: 'Avatar uploaded successfully', url: result.secure_url});
   }
 
