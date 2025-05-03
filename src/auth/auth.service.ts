@@ -2,16 +2,21 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { admin } from './firebase';
 import { UsersService } from '../users/users.service';
 import e from 'express';
+import { UserCurrencyService } from 'src/user-currency/user-currency.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private userCurrencyService: UserCurrencyService, 
+  ) {}
+
   async getUser(firebaseUid: string) {   
-      const user = await this.usersService.findUser({ uid: firebaseUid });
-      if(!user){
-        throw new UnauthorizedException('User not found');
-      }
-      return {user};
+    const user = await this.usersService.findUser({ uid: firebaseUid });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return { user };
   }
 
   async registerUser(email: string, username: string, firebaseUid: string) {
@@ -19,17 +24,17 @@ export class AuthService {
       email: email,
       username: username,
       firebaseUid: firebaseUid,
-      balance: 0, 
-      avatar_url: null, 
+      avatar_url: null,
       role: 'user',
-      last_login: null, 
-      created_at: new Date(), 
+      last_login: null,
+      created_at: new Date(),
     });
-    return {user};
+    await this.userCurrencyService.createOrUpdate(firebaseUid, 'USDT', 0); 
+    return { user };
   }
 
   async deleteUser(uid: string) {
-    this.usersService.deleteUser(uid);
+    await this.usersService.deleteUser(uid); 
     return admin.auth().deleteUser(uid);
   }
 }

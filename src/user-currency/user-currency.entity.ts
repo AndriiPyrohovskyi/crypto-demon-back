@@ -2,7 +2,7 @@ import { Entity, ManyToOne, PrimaryGeneratedColumn, Column, Unique } from 'typeo
 import { User } from 'src/users/user.entity';
 import { Currency } from 'src/currency/currency.entity';
 
-@Entity()
+@Entity("UserCurrency")
 @Unique(['user', 'currency'])
 export class UserCurrency {
   @PrimaryGeneratedColumn()

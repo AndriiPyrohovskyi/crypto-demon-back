@@ -4,6 +4,7 @@ import { Trade } from './trade.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CurrencyService } from 'src/currency/currency.service';
+import { UserCurrencyService } from 'src/user-currency/user-currency.service';
 
 @Injectable()
 export class TradeService {
@@ -14,6 +15,7 @@ export class TradeService {
     @InjectRepository(Trade) private repo: Repository<Trade>,
     private usersService: UsersService,
     private currencyService: CurrencyService,
+    private userCurrencyService: UserCurrencyService,
   ) {}
 
   async createTrade(data: {
@@ -41,13 +43,17 @@ export class TradeService {
       throw new NotFoundException('Користувача не знайдено');
     }
 
-    if (margin > user.balance * this.MAX_MARGIN_PERCENT) {
+    const usdtBalance = await this.userCurrencyService.getOne(user.firebaseUid, 'USDT');
+    if (!usdtBalance) {
+      throw new NotFoundException('Баланс USDT не знайдено');
+    }
+    if (margin > usdtBalance.balance * this.MAX_MARGIN_PERCENT) {
       throw new BadRequestException(
         `Маржа не може перевищувати ${this.MAX_MARGIN_PERCENT * 100}% від вашого балансу`
       );
     }
 
-    if (user.balance - margin < 0) {
+    if (usdtBalance.balance - margin < 0) {
       throw new BadRequestException('Недостатньо коштів для відкриття позиції');
     }
     const currencyId= await this.currencyService.getCurrencyIdBySymbol(symbol);
@@ -58,16 +64,16 @@ export class TradeService {
       throw new BadRequestException('У вас вже є відкрита позиція по цій валюті');
     }
 
-    const value = margin * leverage;
+    const value = parseFloat((margin * leverage).toFixed(8));
 
     let liquidationPrice: number;
     if (type === 'buy') {
-      liquidationPrice = entryPrice - (entryPrice / leverage);
+      liquidationPrice = parseFloat((entryPrice - entryPrice / leverage).toFixed(8));
     } else {
-      liquidationPrice = entryPrice + (entryPrice / leverage);
+      liquidationPrice = parseFloat((entryPrice + entryPrice / leverage).toFixed(8));
     }
 
-    await this.usersService.updateBalance(user.id, -margin);
+    await this.userCurrencyService.setBalance(user.firebaseUid, 'USDT', parseFloat((usdtBalance.balance - margin).toFixed(8))); // Fixed precision
 
 
     const trade = this.repo.create({
@@ -75,10 +81,10 @@ export class TradeService {
       currency: { id: currencyId },
       margin,
       leverage,
-      value: parseFloat(value.toFixed(8)),
+      value,
       type,
       bought_at_price: entryPrice,
-      liquidation_price: parseFloat(liquidationPrice.toFixed(8)),
+      liquidation_price: liquidationPrice,
       status: 'open',
       fixed_user_profit: 0,
       fixed_company_profit: 0,
@@ -109,13 +115,20 @@ export class TradeService {
       profit = (trade.bought_at_price - exitPrice) * (positionSize / trade.bought_at_price);
     }
 
-    trade.fixed_company_profit = parseFloat((profit * 0.05).toFixed(8));
-    trade.fixed_user_profit = parseFloat(profit.toFixed(8))-trade.fixed_company_profit;
+    let companyCommission = 0;
+    if (profit > 0) {
+      companyCommission = parseFloat((profit * 0.05).toFixed(8));
+    }
+    const userProfit = parseFloat((profit > 0 ? profit - companyCommission : profit).toFixed(8));
+
+    trade.fixed_company_profit = companyCommission;
+    trade.fixed_user_profit = userProfit;
     trade.status = 'closed';
     trade.closed_at = new Date();
 
+    const usdtBalance = await this.userCurrencyService.getOne(trade.user.firebaseUid, 'USDT');
     const amountToReturn = parseFloat(trade.margin.toString()) + parseFloat(profit.toString());
-    await this.usersService.updateBalance(trade.user.id, amountToReturn);
+    await this.userCurrencyService.setBalance(trade.user.firebaseUid, 'USDT', usdtBalance.balance + amountToReturn);
 
     return await this.repo.save(trade);
   }

@@ -7,7 +7,7 @@ import { CloudinaryProvider } from './cloudinary.provider';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), ConfigModule,],
+  imports: [TypeOrmModule.forFeature([User]), ConfigModule],
   providers: [UsersService, CloudinaryProvider],
   controllers: [UsersController],
   exports: [UsersService],
