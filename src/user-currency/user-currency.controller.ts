@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Req} from '@nestjs/common';
 import { UserCurrencyService } from './user-currency.service';
 
 @Controller('user-currency')
@@ -8,6 +8,11 @@ export class UserCurrencyController {
   @Get('')
   getAll(@Req() req: Request) {
     return this.service.getAllByUser(req['user'].uid);
+  }
+
+  @Get('balance')
+  getBalance(@Req() req: Request) {
+    return this.service.getUserTotalBalance(req['user'].uid);
   }
 
   @Get(':symbol')

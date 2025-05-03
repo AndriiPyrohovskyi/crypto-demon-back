@@ -64,13 +64,13 @@ export class TradeService {
       throw new BadRequestException('У вас вже є відкрита позиція по цій валюті');
     }
 
-    const value = parseFloat((margin * leverage).toFixed(8)); // Fixed floating-point precision
+    const value = parseFloat((margin * leverage).toFixed(8));
 
     let liquidationPrice: number;
     if (type === 'buy') {
-      liquidationPrice = parseFloat((entryPrice - entryPrice / leverage).toFixed(8)); // Fixed precision
+      liquidationPrice = parseFloat((entryPrice - entryPrice / leverage).toFixed(8));
     } else {
-      liquidationPrice = parseFloat((entryPrice + entryPrice / leverage).toFixed(8)); // Fixed precision
+      liquidationPrice = parseFloat((entryPrice + entryPrice / leverage).toFixed(8));
     }
 
     await this.userCurrencyService.setBalance(user.firebaseUid, 'USDT', parseFloat((usdtBalance.balance - margin).toFixed(8))); // Fixed precision
@@ -115,8 +115,14 @@ export class TradeService {
       profit = (trade.bought_at_price - exitPrice) * (positionSize / trade.bought_at_price);
     }
 
-    trade.fixed_company_profit = parseFloat((profit * 0.05).toFixed(8));
-    trade.fixed_user_profit = parseFloat(profit.toFixed(8))-trade.fixed_company_profit;
+    let companyCommission = 0;
+    if (profit > 0) {
+      companyCommission = parseFloat((profit * 0.05).toFixed(8));
+    }
+    const userProfit = parseFloat((profit > 0 ? profit - companyCommission : profit).toFixed(8));
+
+    trade.fixed_company_profit = companyCommission;
+    trade.fixed_user_profit = userProfit;
     trade.status = 'closed';
     trade.closed_at = new Date();
 

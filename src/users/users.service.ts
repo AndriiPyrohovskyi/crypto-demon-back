@@ -1,9 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import toStream = require('buffer-to-stream');
+import { error } from 'console';
+import { async } from 'rxjs';
 
 @Injectable()
 export class UsersService {
@@ -22,10 +24,16 @@ export class UsersService {
       return user;
     }
     throw new NotFoundException('Користувача не знайдено');
-  }  
+  }
+    
   create(user: Partial<User>): Promise<User> {
     const newUser = this.repo.create(user);
-    return this.repo.save(newUser);
+  return this.repo.save(newUser).catch((err) => {
+    if (err.code === '23505') {
+      throw new ConflictException('Username already exists');
+    }
+    throw err;
+  });
   }
 
   async findById(userId: number): Promise<User> {
