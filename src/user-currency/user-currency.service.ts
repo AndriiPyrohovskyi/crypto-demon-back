@@ -38,29 +38,35 @@ export class UserCurrencyService {
     return totalBalance;
   }
 
-  async getOne(firebaseUid: string, symbol: string): Promise<UserCurrency> {
-    const userCurrency = await this.repo.findOne({
-      where: { user: { firebaseUid }, symbol },
-      relations: ['user'],
+  async getOne(firebaseUid: string, symbol:string): Promise<UserCurrency> {
+    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
+    const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
+    const record = await this.repo.findOne({
+      where: { user: { id: userId }, currency: { id: currencyId } },
     });
-    if (!userCurrency) throw new NotFoundException('UserCurrency not found');
-    return userCurrency;
+
+    if (!record) {
+      throw new NotFoundException('Валюта користувача не знайдена');
+    }
+
+    return record;
   }
 
   async createOrUpdate(firebaseUid: string, symbol: string, amount: number): Promise<UserCurrency> {
+    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
+    const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
     let userCurrency = await this.repo.findOne({
-      where: { user: { firebaseUid }, symbol },
-      relations: ['user'],
+      where: { user: { id: userId }, currency: { id: currencyId } },
     });
-    if (!userCurrency) {
-      userCurrency = this.repo.create({
-        user: { firebaseUid } as any,
-        symbol,
-        balance: amount,
-        reserved: 0,
-      });
+
+    if (userCurrency) {
+      userCurrency.balance = (userCurrency.balance || 0) + amount;
     } else {
-      userCurrency.balance += amount;
+      userCurrency = this.repo.create({
+        user: { id: userId },
+        currency: { id: currencyId },
+        balance: amount,
+      });
     }
     return this.repo.save(userCurrency);
   }

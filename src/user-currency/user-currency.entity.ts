@@ -14,9 +14,6 @@ export class UserCurrency {
   @ManyToOne(() => Currency, currency => currency.userCurrencies, { eager: true })
   currency: Currency;
 
-  @Column()
-  symbol: string;
-
   @Column({ type: 'float', default: 0 })
   balance: number;
 
