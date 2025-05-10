@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './transaction.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CurrencyService } from '../currency/currency.service';
 import { UserCurrencyService } from '../user-currency/user-currency.service';
@@ -22,13 +22,13 @@ export class TransactionService {
 
   async getUserTransactions(userUid: string): Promise<Transaction[]> {
     return this.repo.find({
-        where: [
-            { sender: { firebaseUid: userUid } },
-            { recipient: { firebaseUid: userUid } }
-        ],
-        relations: ['sender', 'recipient', 'currency'],
+      where: [
+        { sender: { firebaseUid: userUid }, value: MoreThan(0) },
+        { recipient: { firebaseUid: userUid }, value: MoreThan(0) }
+      ],
+      relations: ['sender', 'recipient', 'currency'],
     });
-}
+  }
 
   async transfer(data: {
     senderUid: string;
@@ -99,5 +99,9 @@ export class TransactionService {
     } finally {
       await queryRunner.release();
     }
+  }
+  
+  async deleteById(id: number): Promise<void> {
+    await this.repo.delete(id);
   }
 }
