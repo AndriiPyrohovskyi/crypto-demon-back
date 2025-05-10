@@ -35,12 +35,14 @@ export class TransactionService {
     recipientName: string;
     symbol: string;
     amount: number;
+    skipBalanceCheck?: boolean;
+    skipFee?: boolean;
   }): Promise<Transaction> {
     const queryRunner = this.repo.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const { senderUid, recipientName, symbol, amount } = data;
+      const { senderUid, recipientName, symbol, amount, skipBalanceCheck, skipFee } = data;
 
       const sender: User = await this.usersService.findUser({ uid: senderUid });
       const recipient: User = await this.usersService.findByName(recipientName);
@@ -48,19 +50,20 @@ export class TransactionService {
         throw new NotFoundException('Відправник або отримувача не знайдено');
       }
 
-      const fee = amount * 0.01; 
+      const fee = skipFee ? 0 : amount * 0.01;
       const totalDeduction = amount + fee;
 
-      const senderCurrency = await this.userCurrencyService.getOne(sender.firebaseUid, symbol);
-      if (senderCurrency.balance < totalDeduction) {
-        throw new BadRequestException('Недостатньо коштів для переказу');
+      if (!skipBalanceCheck) {
+        const senderCurrency = await this.userCurrencyService.getOne(sender.firebaseUid, symbol);
+        if (senderCurrency.balance < totalDeduction) {
+          throw new BadRequestException('Недостатньо коштів для переказу');
+        }
+        await this.userCurrencyService.setBalance(
+          sender.firebaseUid,
+          symbol,
+          senderCurrency.balance - totalDeduction,
+        );
       }
-
-      await this.userCurrencyService.setBalance(
-        sender.firebaseUid,
-        symbol,
-        senderCurrency.balance - totalDeduction,
-      );
 
       let recipientCurrency;
       try {
