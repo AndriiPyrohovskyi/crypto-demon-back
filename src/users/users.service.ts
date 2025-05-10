@@ -60,8 +60,8 @@ export class UsersService {
     await this.repo.remove(user);
   }
 
-  async updateUser(userId: number, userData: Partial<User>): Promise<User> {
-    const user = await this.findById(userId);
+  async updateUser(userUid: string, userData: Partial<User>): Promise<User> {
+    const user = await this.findUser({ uid: userUid });
     Object.assign(user, userData);
     return await this.repo.save(user);
   }
