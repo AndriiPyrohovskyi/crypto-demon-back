@@ -1,5 +1,5 @@
 // user-currency.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserCurrency } from './user-currency.entity';
@@ -10,14 +10,14 @@ import { CurrencyService } from 'src/currency/currency.service';
 export class UserCurrencyService {
   constructor(
     @InjectRepository(UserCurrency)
-    private userCurrencyRepo: Repository<UserCurrency>,
+    private repo: Repository<UserCurrency>,
     private usersService: UsersService,
     private currencyService: CurrencyService,
   ) {}
 
   async getAllByUser(firebaseUid): Promise<UserCurrency[]> {
     const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
-    return this.userCurrencyRepo.find({
+    return this.repo.find({
       where: { user: { id: userId } },
       relations: ['currency'],
     });
@@ -38,42 +38,68 @@ export class UserCurrencyService {
     return totalBalance;
   }
 
-  async getOne(firebaseUid: string, symbol:string): Promise<UserCurrency> {
-    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
-    const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
-    const record = await this.userCurrencyRepo.findOne({
-      where: { user: { id: userId }, currency: { id: currencyId } },
+  async getOne(firebaseUid: string, symbol: string): Promise<UserCurrency> {
+    const userCurrency = await this.repo.findOne({
+      where: { user: { firebaseUid }, symbol },
+      relations: ['user'],
     });
-
-    if (!record) {
-      throw new NotFoundException('Валюта користувача не знайдена');
-    }
-
-    return record;
+    if (!userCurrency) throw new NotFoundException('UserCurrency not found');
+    return userCurrency;
   }
 
   async createOrUpdate(firebaseUid: string, symbol: string, amount: number): Promise<UserCurrency> {
-    const currencyId = await this.currencyService.getCurrencyIdBySymbol(symbol);
-    const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
-    let userCurrency = await this.userCurrencyRepo.findOne({
-      where: { user: { id: userId }, currency: { id: currencyId } },
+    let userCurrency = await this.repo.findOne({
+      where: { user: { firebaseUid }, symbol },
+      relations: ['user'],
     });
-
-    if (userCurrency) {
-      userCurrency.balance = (userCurrency.balance || 0) + amount;
-    } else {
-      userCurrency = this.userCurrencyRepo.create({
-        user: { id: userId },
-        currency: { id: currencyId },
+    if (!userCurrency) {
+      userCurrency = this.repo.create({
+        user: { firebaseUid } as any,
+        symbol,
         balance: amount,
+        reserved: 0,
       });
+    } else {
+      userCurrency.balance += amount;
     }
-    return this.userCurrencyRepo.save(userCurrency);
+    return this.repo.save(userCurrency);
   }
 
   async setBalance(firebaseUid: string, symbol:string, newBalance: number): Promise<UserCurrency> {
     const userCurrency = await this.getOne(firebaseUid, symbol);
     userCurrency.balance = newBalance;
-    return this.userCurrencyRepo.save(userCurrency);
+    return this.repo.save(userCurrency);
+  }
+
+  async reserveBalance(firebaseUid: string, symbol: string, amount: number) {
+    const userCurrency = await this.getOne(firebaseUid, symbol);
+    if (userCurrency.balance < amount) {
+      throw new BadRequestException('Недостатньо коштів для резервування');
+    }
+    userCurrency.balance -= amount;
+    userCurrency.reserved += amount;
+    return this.repo.save(userCurrency);
+  }
+
+  async releaseReservedBalance(firebaseUid: string, symbol: string, amount: number) {
+    const userCurrency = await this.getOne(firebaseUid, symbol);
+    userCurrency.balance += amount;
+    userCurrency.reserved = Math.max(userCurrency.reserved - amount, 0);
+    return this.repo.save(userCurrency);
+  }
+
+  async spendReserved(firebaseUid: string, symbol: string, amount: number) {
+    const userCurrency = await this.getOne(firebaseUid, symbol);
+    if (userCurrency.reserved < amount) {
+      throw new BadRequestException('Недостатньо зарезервованих коштів');
+    }
+    userCurrency.reserved -= amount;
+    return this.repo.save(userCurrency);
+  }
+
+  async addBalance(firebaseUid: string, symbol: string, amount: number) {
+    const userCurrency = await this.getOne(firebaseUid, symbol);
+    userCurrency.balance += amount;
+    return this.repo.save(userCurrency);
   }
 }
