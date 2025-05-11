@@ -26,7 +26,7 @@ export class AuthService {
       firebaseUid: firebaseUid,
       avatar_url: null,
       role: 'user',
-      last_login: null,
+      last_login: new Date(),
       created_at: new Date(),
     });
     await this.userCurrencyService.createOrUpdate(firebaseUid, 'USDT', 0); 
