@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CurrencyService } from '../currency/currency.service';
 import { UserCurrencyService } from '../user-currency/user-currency.service';
+import { BinarySearchTree } from '../common/binary-search-tree';
 
 @Injectable()
 export class TradeService {
@@ -176,5 +177,47 @@ export class TradeService {
   async findOpenTrades(uid: string): Promise<Trade[]> {
     const user = await this.usersService.findUser({ uid: uid });
     return this.repo.find({ where: { user: { id: user.id }, status: 'open' }, relations: ['currency'] });
+  }
+
+  async getRiskyTrades(): Promise<Trade[]> {
+    const trades = await this.repo.find({ 
+      where: { status: 'open' },
+      relations: ['user', 'currency'],
+    });
+  
+    const tradesBySymbol = new Map<string, Trade[]>();
+    trades.forEach(trade => {
+      const symbol = trade.currency.symbol;
+      if (!tradesBySymbol.has(symbol)) {
+        tradesBySymbol.set(symbol, []);
+      }
+      (tradesBySymbol.get(symbol) ?? []).push(trade);
+    });
+
+    const riskyTrades: Trade[] = [];
+  
+    for (const [symbol, groupTrades] of tradesBySymbol.entries()) {
+      const currencyData = await this.currencyService.getCurrencyBySymbol(symbol);
+      if (!currencyData || currencyData.price === null) continue;
+      const currentPrice = currencyData.price;
+  
+      const bstBuy = new BinarySearchTree<Trade>((a, b) => a.liquidation_price - b.liquidation_price);
+      const bstSell = new BinarySearchTree<Trade>((a, b) => a.liquidation_price - b.liquidation_price);
+  
+      groupTrades.forEach(trade => {
+        if (trade.type === 'buy') {
+          bstBuy.insert(trade);
+        } else {
+          bstSell.insert(trade);
+        }
+      });
+  
+      const riskyBuy = bstBuy.search(trade => trade.liquidation_price <= currentPrice * 1.01);
+      const riskySell = bstSell.search(trade => trade.liquidation_price >= currentPrice * 0.99);
+  
+      riskyTrades.push(...riskyBuy, ...riskySell);
+    }
+    
+    return riskyTrades;
   }
 }

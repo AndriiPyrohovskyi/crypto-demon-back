@@ -134,4 +134,15 @@ export class TradeController {
       trade,
     };
   }
+
+  @Get('trade-risk')
+  @ApiOperation({ summary: 'Отримання ризикових угод для кожної валюти (поточна ціна визначається автоматично)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список ризикових угод',
+    schema: { example: [{ id: 1, type: 'buy', liquidation_price: 29000 }] },
+  })
+  async getRiskyTrades(){
+    return this.tradeService.getRiskyTrades();
+  }
 }
