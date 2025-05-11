@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { TradeService } from './trade/trade.service';
+import { WorkerModule } from './worker.module';
 
 async function bootstrap() {
-  const app = await NestFactory.createApplicationContext(AppModule);
+  const app = await NestFactory.createApplicationContext(WorkerModule);
 
   const tradeServiceInstance = app.get(TradeService);
 
