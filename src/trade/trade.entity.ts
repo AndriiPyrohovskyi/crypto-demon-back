@@ -1,19 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../users/user.entity';
-import { Currency } from '../currency/currency.entity';
+import { Operation } from '../operation.entity';
 
 @Entity('Trades')
-export class Trade {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Trade extends Operation {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
-
-  @ManyToOne(() => Currency)
-  @JoinColumn({ name: 'currency_id' })
-  currency: Currency;
 
   @Column('decimal', { precision: 18, scale: 8, nullable: true })
   margin: number;
@@ -23,9 +16,6 @@ export class Trade {
 
   @Column({ type: 'int', nullable: true })
   leverage: number;
-
-  @Column('decimal', { precision: 18, scale: 8, nullable: true })
-  value: number;
 
   @Column('decimal', { precision: 18, scale: 8, nullable: true })
   bought_at_price: number;
@@ -41,9 +31,6 @@ export class Trade {
 
   @Column('decimal', { precision: 18, scale: 8, nullable: true })
   fixed_company_profit: number;
-
-  @CreateDateColumn()
-  created_at: Date;
 
   @Column({ type: 'timestamp', nullable: true })
   closed_at: Date;
