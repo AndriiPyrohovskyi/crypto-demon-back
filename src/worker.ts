@@ -16,7 +16,7 @@ async function bootstrap() {
       console.error('❌ Error in worker:', error);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5000)); 
+    await new Promise(resolve => setTimeout(resolve, 10000)); 
   }
 }
 
