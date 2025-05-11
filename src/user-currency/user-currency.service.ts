@@ -3,8 +3,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserCurrency } from './user-currency.entity';
-import { UsersService } from 'src/users/users.service';
-import { CurrencyService } from 'src/currency/currency.service';
+import { UsersService } from '../users/users.service';
+import { CurrencyService } from '../currency/currency.service';
 
 @Injectable()
 export class UserCurrencyService {

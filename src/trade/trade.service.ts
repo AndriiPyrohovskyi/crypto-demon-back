@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Trade } from './trade.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
-import { CurrencyService } from 'src/currency/currency.service';
-import { UserCurrencyService } from 'src/user-currency/user-currency.service';
+import { CurrencyService } from '../currency/currency.service';
+import { UserCurrencyService } from '../user-currency/user-currency.service';
 
 @Injectable()
 export class TradeService {

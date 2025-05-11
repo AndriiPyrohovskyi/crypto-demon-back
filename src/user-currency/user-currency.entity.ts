@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from 'src/users/user.entity';
-import { Currency } from 'src/currency/currency.entity';
+import { User } from '../users/user.entity';
+import { Currency } from '../currency/currency.entity';
 
 @Entity('UserCurrency')
 export class UserCurrency {

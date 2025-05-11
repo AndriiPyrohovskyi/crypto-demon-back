@@ -1,4 +1,4 @@
-import { UserCurrency } from 'src/user-currency/user-currency.entity';
+import { UserCurrency } from '../user-currency/user-currency.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 @Entity('Currency')

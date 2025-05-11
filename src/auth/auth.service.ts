@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { admin } from './firebase';
 import { UsersService } from '../users/users.service';
 import e from 'express';
-import { UserCurrencyService } from 'src/user-currency/user-currency.service';
+import { UserCurrencyService } from '../user-currency/user-currency.service';
 
 @Injectable()
 export class AuthService {

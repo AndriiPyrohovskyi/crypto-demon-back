@@ -5,7 +5,7 @@ import { MoreThan, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CurrencyService } from '../currency/currency.service';
 import { UserCurrencyService } from '../user-currency/user-currency.service';
-import { User } from 'src/users/user.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class TransactionService {
