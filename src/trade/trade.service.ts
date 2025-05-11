@@ -191,21 +191,31 @@ export class TradeService {
       try {
         response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
       } catch (error) {
-        this.logger?.error?.(`Failed to fetch price for ${symbol}: ${error.message}`);
+        this.logger.error(`Failed to fetch price for ${symbol}: ${error.message}`);
         continue;
       }
 
       if (!response.ok) {
-        this.logger?.warn?.(`Non-OK response for ${symbol}: ${response.statusText}`);
+        this.logger.warn(`Non-OK response for ${symbol}: ${response.statusText}`);
         continue;
       }
 
       const data = await response.json();
       const currentPrice = parseFloat(data.price);
       if (isNaN(currentPrice)) {
-        this.logger?.warn?.(`Invalid price received for ${symbol}`);
+        this.logger.warn(`Invalid price received for ${symbol}`);
         continue;
       }
+
+      const margin = parseFloat(trade.margin?.toString() || '0');
+      if (!margin || !trade.bought_at_price) {
+        this.logger.warn(`Trade ${trade.id} has no valid margin or bought_at_price`);
+        continue;
+      }
+
+      let shouldClose = false;
+      let closeType: 'closed' | 'liquidated' | null = null;
+
       if (
         trade.liquidation_price &&
         (
@@ -213,31 +223,43 @@ export class TradeService {
           (trade.type === 'sell' && currentPrice >= trade.liquidation_price)
         )
       ) {
-        await this.liquidateTrade(trade);
-        this.logger?.log?.(`Trade ${trade.id} liquidated at ${currentPrice}`);
-        continue;
+        shouldClose = true;
+        closeType = 'liquidated';
+        trade.fixed_user_profit = -margin;
       }
-      if (
+      else if (
         trade.TP_price &&
         (
           (trade.type === 'buy' && currentPrice >= trade.TP_price) ||
           (trade.type === 'sell' && currentPrice <= trade.TP_price)
         )
       ) {
-        await this.close(trade, currentPrice);
-        this.logger?.log?.(`Trade ${trade.id} closed by TP at ${currentPrice}`);
-        continue;
+        shouldClose = true;
+        closeType = 'closed';
+        trade.fixed_user_profit = parseFloat(
+          ((currentPrice - trade.bought_at_price) * margin / trade.bought_at_price).toFixed(8)
+        );
       }
-      if (
+      else if (
         trade.SL_price &&
         (
           (trade.type === 'buy' && currentPrice <= trade.SL_price) ||
           (trade.type === 'sell' && currentPrice >= trade.SL_price)
         )
       ) {
-        await this.close(trade, currentPrice);
-        this.logger?.log?.(`Trade ${trade.id} closed by SL at ${currentPrice}`);
-        continue;
+        shouldClose = true;
+        closeType = 'closed';
+        trade.fixed_user_profit = -margin;
+      }
+
+      if (shouldClose && closeType) {
+        trade.status = closeType;
+        trade.closed_at = new Date();
+        trade.closing_price = currentPrice;
+        trade.fixed_company_profit = 0;
+
+        await this.repo.save(trade);
+        this.logger.log(`Trade ${trade.id} closed as ${closeType} at ${currentPrice}`);
       }
     }
   }
