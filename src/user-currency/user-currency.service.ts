@@ -108,4 +108,24 @@ export class UserCurrencyService {
     userCurrency.balance += amount;
     return this.repo.save(userCurrency);
   }
+
+  async exchangeCurrency(
+    firebaseUid: string,
+    fromSymbol: string,
+    toSymbol: string,
+    fromAmount: number,
+    toAmount: number,
+  ): Promise<UserCurrency[]> {
+    const fromCurrency = await this.getOne(firebaseUid, fromSymbol);
+    const toCurrency = await this.getOne(firebaseUid, toSymbol);
+
+    if (fromCurrency.balance < fromAmount) {
+      throw new BadRequestException('Недостатньо коштів для обміну');
+    }
+
+    fromCurrency.balance -= fromAmount;
+    toCurrency.balance += toAmount;
+
+    return Promise.all([this.repo.save(fromCurrency), this.repo.save(toCurrency)]);
+  }
 }

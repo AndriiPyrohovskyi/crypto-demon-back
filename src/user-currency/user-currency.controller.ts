@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Body, Req } from '@nestjs/common';
 import { UserCurrencyService } from './user-currency.service';
 import { ApiTags, ApiOperation, ApiParam, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { TransactionModule } from 'src/transaction/transaction.module';
 
 @ApiTags('User Currency')
 @Controller('user-currency')
@@ -76,4 +77,25 @@ export class UserCurrencyController {
   ) {
     return this.service.setBalance(req['user'].uid, symbol, balance);
   }
+
+  @Post('exchange')
+  @ApiOperation({ summary: 'Обмін валюти' })
+  @ApiBody({
+    schema: { example: { fromSymbol: 'BTC', toSymbol: 'ETH', fromAmount: 0.5, toAmount: 1000} },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Обмін валюти успішно виконано',
+    schema: { example: { fromSymbol: 'BTC', toSymbol: 'ETH', fromAmount: 0.5, toAmount: 1000} },
+  })
+  exchangeCurrency(
+    @Req() req: Request,
+    @Body('fromSymbol') fromSymbol: string,
+    @Body('toSymbol') toSymbol: string,
+    @Body('fromAmount') fromAmount: number,
+    @Body('toAmount') toAmount: number,
+  ) {
+    return this.service.exchangeCurrency(req['user'].uid, fromSymbol, toSymbol, fromAmount, toAmount);
+  }
+  
 }
