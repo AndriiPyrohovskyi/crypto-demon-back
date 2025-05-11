@@ -13,7 +13,8 @@ async function bootstrap() {
   });
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-  app.useGlobalGuards(new FirebaseAuthGuard());
+  const firebaseAuthGuard = app.get(FirebaseAuthGuard);
+  app.useGlobalGuards(firebaseAuthGuard);
 
 
   const config = new DocumentBuilder()
