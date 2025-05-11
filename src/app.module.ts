@@ -12,6 +12,7 @@ import { ExchangeModule } from './exchange/exchange.module';
 import { User } from './users/user.entity';
 import { UserCurrency } from './user-currency/user-currency.entity';
 import { UserCurrencyModule } from './user-currency/user-currency.module';
+import { FirebaseAuthGuard } from './auth/firebase-auth.guard';
 
 @Module({
   imports: [
@@ -31,6 +32,6 @@ import { UserCurrencyModule } from './user-currency/user-currency.module';
     }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule, UserCurrencyModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, FirebaseAuthGuard],
 })
 export class AppModule {}

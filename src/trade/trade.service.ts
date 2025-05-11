@@ -173,66 +173,76 @@ export class TradeService {
   }
 
   async checkAndCloseTrades(): Promise<void> {
-    const trades = await this.repo.find({
-      where: { status: 'open' },
-      relations: ['user', 'currency'],
-    });
+    const batchSize = 100;
+    let skip = 0;
+    let trades: Trade[];
 
-    for (const trade of trades) {
-      const symbol = `${trade.currency.symbol.toUpperCase()}USDT`;
+    do {
+      trades = await this.repo.find({
+        where: { status: 'open' },
+        relations: ['user', 'currency'],
+        skip,
+        take: batchSize,
+      });
 
-      let response;
-      try {
-        response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-      } catch (error) {
-        this.logger?.error?.(`Failed to fetch price for ${symbol}: ${error.message}`);
-        continue;
+      for (const trade of trades) {
+        const symbol = `${trade.currency.symbol.toUpperCase()}USDT`;
+
+        let response;
+        try {
+          response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+        } catch (error) {
+          this.logger?.error?.(`Failed to fetch price for ${symbol}: ${error.message}`);
+          continue;
+        }
+
+        if (!response.ok) {
+          this.logger?.warn?.(`Non-OK response for ${symbol}: ${response.statusText}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const currentPrice = parseFloat(data.price);
+        if (isNaN(currentPrice)) {
+          this.logger?.warn?.(`Invalid price received for ${symbol}`);
+          continue;
+        }
+        if (
+          trade.liquidation_price &&
+          (
+            (trade.type === 'buy' && currentPrice <= trade.liquidation_price) ||
+            (trade.type === 'sell' && currentPrice >= trade.liquidation_price)
+          )
+        ) {
+          await this.checkLiquidation(trade.id, currentPrice);
+          this.logger?.log?.(`Trade ${trade.id} liquidated at ${currentPrice}`);
+          continue;
+        }
+        if (
+          trade.TP_price &&
+          (
+            (trade.type === 'buy' && currentPrice >= trade.TP_price) ||
+            (trade.type === 'sell' && currentPrice <= trade.TP_price)
+          )
+        ) {
+          await this.closeTrade(trade.id, currentPrice);
+          this.logger?.log?.(`Trade ${trade.id} closed by TP at ${currentPrice}`);
+          continue;
+        }
+        if (
+          trade.SL_price &&
+          (
+            (trade.type === 'buy' && currentPrice <= trade.SL_price) ||
+            (trade.type === 'sell' && currentPrice >= trade.SL_price)
+          )
+        ) {
+          await this.closeTrade(trade.id, currentPrice);
+          this.logger?.log?.(`Trade ${trade.id} closed by SL at ${currentPrice}`);
+          continue;
+        }
       }
 
-      if (!response.ok) {
-        this.logger?.warn?.(`Non-OK response for ${symbol}: ${response.statusText}`);
-        continue;
-      }
-
-      const data = await response.json();
-      const currentPrice = parseFloat(data.price);
-      if (isNaN(currentPrice)) {
-        this.logger?.warn?.(`Invalid price received for ${symbol}`);
-        continue;
-      }
-      if (
-        trade.liquidation_price &&
-        (
-          (trade.type === 'buy' && currentPrice <= trade.liquidation_price) ||
-          (trade.type === 'sell' && currentPrice >= trade.liquidation_price)
-        )
-      ) {
-        await this.checkLiquidation(trade.id, currentPrice);
-        this.logger?.log?.(`Trade ${trade.id} liquidated at ${currentPrice}`);
-        continue;
-      }
-      if (
-        trade.TP_price &&
-        (
-          (trade.type === 'buy' && currentPrice >= trade.TP_price) ||
-          (trade.type === 'sell' && currentPrice <= trade.TP_price)
-        )
-      ) {
-        await this.closeTrade(trade.id, currentPrice);
-        this.logger?.log?.(`Trade ${trade.id} closed by TP at ${currentPrice}`);
-        continue;
-      }
-      if (
-        trade.SL_price &&
-        (
-          (trade.type === 'buy' && currentPrice <= trade.SL_price) ||
-          (trade.type === 'sell' && currentPrice >= trade.SL_price)
-        )
-      ) {
-        await this.closeTrade(trade.id, currentPrice);
-        this.logger?.log?.(`Trade ${trade.id} closed by SL at ${currentPrice}`);
-        continue;
-      }
-    }
+      skip += batchSize;
+    } while (trades.length === batchSize);
   }
 }
