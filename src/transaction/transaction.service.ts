@@ -49,6 +49,9 @@ export class TransactionService {
       if (!sender || !recipient) {
         throw new NotFoundException('Відправник або отримувача не знайдено');
       }
+      if (sender.firebaseUid === recipient.firebaseUid) {
+        throw new BadRequestException('Неможливо здійснити переказ самому з собою');
+      }
 
       const fee = skipFee ? 0 : amount * 0.01;
       const totalDeduction = amount + fee;
