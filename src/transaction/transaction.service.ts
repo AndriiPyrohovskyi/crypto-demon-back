@@ -54,8 +54,8 @@ export class TransactionService {
       }
 
       const fee = skipFee ? 0 : amount * 0.01;
-      const totalDeduction = amount + fee;
-
+      const totalDeduction = parseFloat(amount.toString()) + parseFloat(fee.toString());
+    
       if (!skipBalanceCheck) {
         const senderCurrency = await this.userCurrencyService.getOne(sender.firebaseUid, symbol);
         if (senderCurrency.balance < totalDeduction) {
@@ -74,7 +74,7 @@ export class TransactionService {
         await this.userCurrencyService.setBalance(
           recipient.firebaseUid,
           symbol,
-          recipientCurrency.balance + amount,
+          recipientCurrency.balance + parseFloat(amount.toString()),
         );
       } catch (e) {
         await this.userCurrencyService.createOrUpdate(recipient.firebaseUid, symbol, amount);
