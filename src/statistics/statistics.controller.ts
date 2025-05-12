@@ -14,7 +14,12 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Комбінована інформація про комісії',
-    schema: { example: { totalCommission: 123.45, commissionChartData: [{ month: '2025-03', totalCommission: '12.34' }] } },
+    schema: {
+      example: { 
+        totalCommission: 123.45, 
+        commissionChartData: [{ month: '2025-03', totalCommission: '12.34' }]
+      }
+    },
   })
   async getCombinedCommissionData() {
     return this.service.getCombinedCommissionData();
@@ -26,7 +31,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Дані обʼєму обмінів',
-    schema: { example: [{ date: '2025-03-01', total_from: '0.5', total_to: '15000' }] },
+    schema: {
+      example: [{ date: '2025-03-01', total_from: '0.5', total_to: '15000' }]
+    },
   })
   async getExchangeVolume(@Query('period') period: string = 'day') {
     return this.service.getExchangeVolume(period as 'day' | 'week' | 'month');
@@ -38,7 +45,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Дані обʼєму трейдів',
-    schema: { example: [{ date: '2025-03-01', totalMargin: '50', totalValue: '500' }] },
+    schema: {
+      example: [{ date: '2025-03-01', totalMargin: '50', totalValue: '500' }]
+    },
   })
   async getTradeVolume(@Query('period') period: string = 'day') {
     return this.service.getTradeVolume(period as 'day' | 'week' | 'month');
@@ -61,7 +70,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Список топ користувачів',
-    schema: { example: [{ userId: 1, totalBalance: 1000.50 }] },
+    schema: {
+      example: [{ username: 'admin', totalBalance: 1000.50 }]
+    },
   })
   async getTopUsers(@Query('limit') limit: string = '5') {
     return this.service.getTopUsers(parseInt(limit, 10));
@@ -83,7 +94,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Список останніх трейдів',
-    schema: { example: [{ id: 1, type: 'buy', margin: 100, status: 'closed' }] },
+    schema: {
+      example: [{ id: 1, type: 'buy', margin: 100, status: 'closed' }]
+    },
   })
   async getRecentTrades() {
     return this.service.getRecentTrades();
@@ -94,7 +107,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Кількість нових користувачів по днях',
-    schema: { example: [{ date: '2025-04-01', count: 5 }, { date: '2025-04-02', count: 7 }] },
+    schema: {
+      example: [{ date: '2025-04-01', count: 5 }, { date: '2025-04-02', count: 7 }]
+    },
   })
   async getNewUsersCount() {
     return this.service.getNewUsersCount();
@@ -105,7 +120,9 @@ export class StatisticsController {
   @ApiResponse({
     status: 200,
     description: 'Найбільш прибутковий користувач',
-    schema: { example: { userId: 'user123', totalProfit: 567.89 } },
+    schema: {
+      example: { username: 'admin', totalProfit: 567.89 }
+    },
   })
   async getHighestEarningUser() {
     return this.service.getHighestEarningUser();
