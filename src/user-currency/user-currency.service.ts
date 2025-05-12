@@ -130,8 +130,9 @@ export class UserCurrencyService {
       toCurrency.balance += parseFloat(toAmount.toString());
     } catch (error) {
       const currencyId = await this.currencyService.getCurrencyIdBySymbol(toSymbol);
+      const userId = (await this.usersService.findUser({ uid: firebaseUid })).id;
       toCurrency = this.repo.create({
-        user: { id: fromCurrency.user.id },
+        user: { id: userId },
         currency: { id: currencyId },
         balance: parseFloat(toAmount.toString()),
       });
