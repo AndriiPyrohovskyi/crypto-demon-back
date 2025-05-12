@@ -180,9 +180,10 @@ export class TradeService {
     return this.repo.find({ where: { user: { id: user.id }, status: 'open' }, relations: ['currency'] });
   }
 
-  async getRiskyTrades(): Promise<Trade[]> {
+  async getRiskyTrades(uid: string): Promise<Trade[]> {
+    const user = await this.usersService.findUser({ uid }); 
     const trades = await this.repo.find({ 
-      where: { status: 'open' },
+      where: { status: 'open', user: { id: user.id } },
       relations: ['user', 'currency'],
     });
   
@@ -192,11 +193,10 @@ export class TradeService {
       if (!tradesBySymbol.has(symbol)) {
         tradesBySymbol.set(symbol, []);
       }
-      (tradesBySymbol.get(symbol) ?? []).push(trade);
+      tradesBySymbol.get(symbol)?.push(trade);
     });
-
-    const riskyTrades: Trade[] = [];
   
+    const riskyTrades: Trade[] = [];
     for (const [symbol, groupTrades] of tradesBySymbol.entries()) {
       const currencyData = await this.currencyService.getCurrencyBySymbol(symbol);
       if (!currencyData || currencyData.price === null) continue;
@@ -213,12 +213,20 @@ export class TradeService {
         }
       });
   
-      const riskyBuy = bstBuy.search(trade => trade.liquidation_price <= currentPrice * 1.01);
-      const riskySell = bstSell.search(trade => trade.liquidation_price >= currentPrice * 0.99);
+      const riskyBuy = bstBuy.search(trade => {
+        const diff = (currentPrice - trade.liquidation_price) / currentPrice;
+        return trade.liquidation_price < currentPrice && diff <= 0.05;
+      });
+        
+      const riskySell = bstSell.search(trade => {
+        const diff = (trade.liquidation_price - currentPrice) / currentPrice;
+        return trade.liquidation_price > currentPrice && diff <= 0.05;
+      });
   
       riskyTrades.push(...riskyBuy, ...riskySell);
     }
     
     return riskyTrades;
   }
+  
 }

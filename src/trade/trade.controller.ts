@@ -136,13 +136,13 @@ export class TradeController {
   }
 
   @Get('trade-risk')
-  @ApiOperation({ summary: 'Отримання ризикових угод для кожної валюти (поточна ціна визначається автоматично)' })
+  @ApiOperation({ summary: 'Отримання ризикових угод поточного користувача' })
   @ApiResponse({
     status: 200,
     description: 'Список ризикових угод',
     schema: { example: [{ id: 1, type: 'buy', liquidation_price: 29000 }] },
   })
-  async getRiskyTrades(){
-    return this.tradeService.getRiskyTrades();
+  async getRiskyTrades(@Req() req) {
+    return this.tradeService.getRiskyTrades(req.user.uid);
   }
 }
