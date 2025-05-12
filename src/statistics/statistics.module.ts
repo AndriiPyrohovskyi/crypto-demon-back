@@ -7,9 +7,10 @@ import { UserCurrency } from '../user-currency/user-currency.entity';
 import { User } from '../users/user.entity';
 import { StatisticsService } from './statistics.service';
 import { StatisticsController } from './statistics.controller';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Exchange, Trade, Transaction, UserCurrency, User])],
+  imports: [TypeOrmModule.forFeature([Exchange, Trade, Transaction, UserCurrency, User]),UsersModule,],
   providers: [StatisticsService],
   controllers: [StatisticsController],
   exports: [StatisticsService],
