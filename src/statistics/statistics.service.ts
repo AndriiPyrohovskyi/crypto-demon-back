@@ -119,9 +119,10 @@ export class StatisticsService {
   async getUserStatistics(): Promise<{ totalUsers: number; averageBalance: number }> {
     const usersBalances = await this.userCurrencyRepo
       .createQueryBuilder('uc')
-      .select('uc.user_id', 'userId')
+      .leftJoin('uc.user', 'user')
+      .select('user.username', 'username')
       .addSelect('SUM(uc.balance)', 'userBalance')
-      .groupBy('uc.user_id')
+      .groupBy('user.username')
       .getRawMany();
     const totalUsers = usersBalances.length;
     const sumBalance = usersBalances.reduce((acc, cur) => acc + parseFloat(cur.userBalance), 0);
@@ -132,9 +133,10 @@ export class StatisticsService {
   async getTopUsers(limit = 5): Promise<any[]> {
     return this.userCurrencyRepo
       .createQueryBuilder('uc')
-      .select('uc.user_id', 'userId')
+      .leftJoin('uc.user', 'user')
+      .select('user.username', 'username')
       .addSelect('SUM(uc.balance)', 'totalBalance')
-      .groupBy('uc.user_id')
+      .groupBy('user.username')
       .orderBy('"totalBalance"', 'DESC')
       .limit(limit)
       .getRawMany();
@@ -168,20 +170,20 @@ export class StatisticsService {
       .getRawMany();
   }
 
-  async getHighestEarningUser(): Promise<{ userId: string; totalProfit: number }> {
+  async getHighestEarningUser(): Promise<{ username: string; totalProfit: number }> {
     const result = await this.tradeRepo
       .createQueryBuilder('trade')
       .leftJoin('trade.transaction_from', 'transaction')
       .leftJoin('transaction.sender', 'sender')
-      .select('sender.firebaseUid', 'userId')
+      .select('sender.username', 'username')
       .addSelect('SUM(trade.fixed_user_profit)', 'totalProfit')
       .where("trade.status = 'closed'")
-      .groupBy('sender.firebaseUid')
+      .groupBy('sender.username')
       .orderBy('totalProfit', 'DESC')
       .limit(1)
       .getRawOne();
     return {
-      userId: result.userId,
+      username: result.username,
       totalProfit: parseFloat(result.totalProfit) || 0,
     };
   }
