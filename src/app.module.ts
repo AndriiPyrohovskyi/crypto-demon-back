@@ -15,6 +15,8 @@ import { UserCurrencyModule } from './user-currency/user-currency.module';
 import { FirebaseAuthGuard } from './auth/firebase-auth.guard';
 import { stat } from 'fs';
 import { StatisticsModule } from './statistics/statistics.module';
+import { Admin } from 'typeorm';
+import { AdminGuard } from './AdminGuard';
 
 @Module({
   imports: [
@@ -34,6 +36,6 @@ import { StatisticsModule } from './statistics/statistics.module';
     }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule, UserCurrencyModule, StatisticsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, FirebaseAuthGuard],
+  providers: [AppService, FirebaseAuthGuard, AdminGuard],
 })
 export class AppModule {}

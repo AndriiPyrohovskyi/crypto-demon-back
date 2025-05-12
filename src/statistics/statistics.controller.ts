@@ -1,8 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { StatisticsService } from './statistics.service';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { AdminGuard } from 'src/AdminGuard';
 
 @ApiTags('Statistics')
+@UseGuards(AdminGuard)
 @Controller('statistics')
 export class StatisticsController {
   constructor(private readonly service: StatisticsService) {}
