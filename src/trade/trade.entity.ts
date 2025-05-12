@@ -38,13 +38,13 @@ export class Trade extends Operation {
   @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   closing_price: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   TP_value: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   TP_price: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
   SL_value: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 8, nullable: true })
