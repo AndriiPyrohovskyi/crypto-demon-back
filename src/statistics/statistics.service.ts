@@ -73,14 +73,20 @@ export class StatisticsService {
   }
 
   async getExchangeVolume(period: 'day' | 'week' | 'month'): Promise<any[]> {
-    let dateFunc = "DATE_TRUNC('day', exchange.created_at)";
-    if (period === 'week') dateFunc = "DATE_TRUNC('week', exchange.created_at)";
-    else if (period === 'month') dateFunc = "DATE_TRUNC('month', exchange.created_at)";
+    let dateFunc = "DATE_TRUNC('day', transaction.created_at)";
+    if (period === 'week') {
+      dateFunc = "DATE_TRUNC('week', transaction.created_at)";
+    } else if (period === 'month') {
+      dateFunc = "DATE_TRUNC('month', transaction.created_at)";
+    }
+    
     return this.exchangeRepo
       .createQueryBuilder('exchange')
+      .leftJoin('exchange.transaction_from', 'transaction')
       .select(`${dateFunc}`, 'date')
       .addSelect('SUM(exchange.fromAmount)', 'total_from')
       .addSelect('SUM(exchange.toAmount)', 'total_to')
+      .where(`${dateFunc} IS NOT NULL`)
       .groupBy('date')
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -129,7 +135,7 @@ export class StatisticsService {
       .select('uc.user_id', 'userId')
       .addSelect('SUM(uc.balance)', 'totalBalance')
       .groupBy('uc.user_id')
-      .orderBy('totalBalance', 'DESC')
+      .orderBy('"totalBalance"', 'DESC')
       .limit(limit)
       .getRawMany();
   }
