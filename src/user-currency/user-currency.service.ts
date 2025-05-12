@@ -90,7 +90,7 @@ export class UserCurrencyService {
   async releaseReservedBalance(firebaseUid: string, symbol: string, amount: number) {
     const userCurrency = await this.getOne(firebaseUid, symbol);
     userCurrency.balance += parseFloat(amount.toString());
-    userCurrency.reserved = Math.max(userCurrency.reserved - parseFloat(amount.toFixed(8)), 0);
+    userCurrency.reserved = Math.max(userCurrency.reserved - parseFloat(amount.toString()), 0);
     return this.repo.save(userCurrency);
   }
 
