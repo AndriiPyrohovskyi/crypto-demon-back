@@ -13,6 +13,8 @@ import { User } from './users/user.entity';
 import { UserCurrency } from './user-currency/user-currency.entity';
 import { UserCurrencyModule } from './user-currency/user-currency.module';
 import { FirebaseAuthGuard } from './auth/firebase-auth.guard';
+import { stat } from 'fs';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { FirebaseAuthGuard } from './auth/firebase-auth.guard';
           rejectUnauthorized: false,
         },
       },
-    }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule, UserCurrencyModule,
+    }), UsersModule, TradeModule, TransactionModule, CurrencyModule, ExchangeModule, UserCurrencyModule, StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService, FirebaseAuthGuard],
