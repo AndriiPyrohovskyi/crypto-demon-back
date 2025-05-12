@@ -6,7 +6,7 @@ export class Exchange {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Transaction, { nullable: true })
+  @ManyToOne(() => Transaction, {   onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'transaction_from_id' })
   transaction_from: Transaction;
 
