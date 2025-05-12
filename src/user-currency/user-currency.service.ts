@@ -82,14 +82,14 @@ export class UserCurrencyService {
     if (userCurrency.balance < amount) {
       throw new BadRequestException('Недостатньо коштів для резервування');
     }
-    userCurrency.balance -= parseFloat(amount.toFixed(8));
-    userCurrency.reserved += parseFloat(amount.toFixed(8));
+    userCurrency.balance -= parseFloat(amount.toString());
+    userCurrency.reserved += parseFloat(amount.toString());
     return this.repo.save(userCurrency);
   }
 
   async releaseReservedBalance(firebaseUid: string, symbol: string, amount: number) {
     const userCurrency = await this.getOne(firebaseUid, symbol);
-    userCurrency.balance += parseFloat(amount.toFixed(8));
+    userCurrency.balance += parseFloat(amount.toString());
     userCurrency.reserved = Math.max(userCurrency.reserved - parseFloat(amount.toFixed(8)), 0);
     return this.repo.save(userCurrency);
   }
@@ -99,13 +99,13 @@ export class UserCurrencyService {
     if (userCurrency.reserved < amount) {
       throw new BadRequestException('Недостатньо зарезервованих коштів');
     }
-    userCurrency.reserved -= parseFloat(amount.toFixed(8));
+    userCurrency.reserved -= parseFloat(amount.toString());
     return this.repo.save(userCurrency);
   }
 
   async addBalance(firebaseUid: string, symbol: string, amount: number) {
     const userCurrency = await this.getOne(firebaseUid, symbol);
-    userCurrency.balance += parseFloat(amount.toFixed(8));
+    userCurrency.balance += parseFloat(amount.toString());
     return this.repo.save(userCurrency);
   }
 
@@ -124,7 +124,7 @@ export class UserCurrencyService {
     }
 
     fromCurrency.balance -= fromAmount;
-    toCurrency.balance += parseFloat(toAmount.toFixed(8));
+    toCurrency.balance += parseFloat(toAmount.toString());
 
     return Promise.all([this.repo.save(fromCurrency), this.repo.save(toCurrency)]);
   }
