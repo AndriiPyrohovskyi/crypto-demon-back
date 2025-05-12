@@ -129,6 +129,7 @@ export class TradeService {
     trade.fixed_company_profit = companyCommission;
     trade.fixed_user_profit = userProfit;
     trade.status = 'closed';
+    trade.closing_price = exitPrice;
     trade.closed_at = new Date();
 
     const usdtBalance = await this.userCurrencyService.getOne(trade.user.firebaseUid, 'USDT');
