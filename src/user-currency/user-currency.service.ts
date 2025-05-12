@@ -117,17 +117,18 @@ export class UserCurrencyService {
     toAmount: number,
   ): Promise<UserCurrency[]> {
     const fromCurrency = await this.getOne(firebaseUid, fromSymbol);
-    let toCurrency = await this.getOne(firebaseUid, toSymbol);
+    
 
     if (fromCurrency.balance < fromAmount) {
       throw new BadRequestException('Недостатньо коштів для обміну');
     }
 
     fromCurrency.balance -= fromAmount;
-    if(toCurrency) {
-    toCurrency.balance += parseFloat(toAmount.toString());
-    }
-    else {
+    let toCurrency;
+    try {
+      toCurrency = await this.getOne(firebaseUid, toSymbol);
+      toCurrency.balance += parseFloat(toAmount.toString());
+    } catch (error) {
       const currencyId = await this.currencyService.getCurrencyIdBySymbol(toSymbol);
       toCurrency = this.repo.create({
         user: { id: fromCurrency.user.id },
